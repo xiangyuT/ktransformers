@@ -16,11 +16,11 @@ import torch.nn.quantized as nnq
 
 scale, zero_point = 0.1, 0  # Adjust scale and zero_point based on your dataset
 
-expert_num = 160
-hidden_size = 5120
-intermediate_size = 1536
-n_routed_experts = 6
-layer_num = 10
+expert_num = 256
+hidden_size = 7168
+intermediate_size = 18432
+n_routed_experts = 8
+layer_num = 1
 qlen = 1
 warm_up_iter = 1000
 test_iter = 10000
@@ -98,9 +98,9 @@ def bench_moe(quant_mode: str):
         up_projs = []
         down_projs = []
         for _ in range(layer_num):
-            gate_proj = torch.randn((expert_num, intermediate_size, hidden_size), dtype=torch.float32, device = "cuda").to("cpu").contiguous()
-            up_proj = torch.randn((expert_num, intermediate_size, hidden_size), dtype=torch.float32, device = "cuda").to("cpu").contiguous()
-            down_proj = torch.randn((expert_num, hidden_size, intermediate_size), dtype=torch.float32, device = "cuda").to("cpu").contiguous()
+            gate_proj = torch.randn((expert_num, intermediate_size, hidden_size), dtype=torch.float32, device = "cpu").to("cpu").contiguous()
+            up_proj = torch.randn((expert_num, intermediate_size, hidden_size), dtype=torch.float32, device = "cpu").to("cpu").contiguous()
+            down_proj = torch.randn((expert_num, hidden_size, intermediate_size), dtype=torch.float32, device = "cpu").to("cpu").contiguous()
             if quant_mode == "qint8":
                 quantized_gate_proj = []
                 quantized_up_proj = []
@@ -125,9 +125,9 @@ def bench_moe(quant_mode: str):
                 gate_projs.append(gate_proj.to(proj_type))
                 up_projs.append(up_proj.to(proj_type))
                 down_projs.append(down_proj.to(proj_type))
-        expert_ids = torch.stack([torch.stack([torch.randperm(expert_num, dtype=torch.int64, device = "cuda")[:n_routed_experts] for _ in range(qlen)]) for _ in range(layer_num)]).to("cpu").contiguous()
-        weights = torch.rand((layer_num, qlen, n_routed_experts), dtype=torch.float32, device = "cuda").to("cpu").contiguous()
-        input = torch.randn((layer_num, qlen, hidden_size), dtype=torch.bfloat16, device = "cuda").to("cpu").contiguous()
+        expert_ids = torch.stack([torch.stack([torch.randperm(expert_num, dtype=torch.int64, device = "cpu")[:n_routed_experts] for _ in range(qlen)]) for _ in range(layer_num)]).to("cpu").contiguous()
+        weights = torch.rand((layer_num, qlen, n_routed_experts), dtype=torch.float32, device = "cpu").to("cpu").contiguous()
+        input = torch.randn((layer_num, qlen, hidden_size), dtype=torch.bfloat16, device = "cpu").to("cpu").contiguous()
 
         # warm up
         for i in range(warm_up_iter):
@@ -149,4 +149,4 @@ def bench_moe(quant_mode: str):
 bench_moe("fp32")
 bench_moe("fp16")
 bench_moe("bf16")
-bench_moe("qint8")
+# bench_moe("qint8")

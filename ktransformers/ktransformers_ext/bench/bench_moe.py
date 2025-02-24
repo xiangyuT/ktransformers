@@ -15,13 +15,13 @@ sys.path.append(os.path.dirname(__file__) + '/../build')
 import cpuinfer_ext
 import torch
 
-expert_num = 160
-hidden_size = 5120
-intermediate_size = 1536
+expert_num = 256
+hidden_size = 7168
+intermediate_size = 18432
 stride = 16
 group_min_len = 10
 group_max_len = 1024
-n_routed_experts = 6
+n_routed_experts = 8
 layer_num = 10
 qlen = 1
 CPUInfer = cpuinfer_ext.CPUInfer(64)
@@ -95,19 +95,19 @@ def bench_moe(quant_mode: str):
         up_projs = []
         down_projs = []
         for _ in range(layer_num):
-            gate_proj = torch.randn((expert_num, intermediate_size, hidden_size), dtype=torch.float32, device = "cuda").to("cpu").contiguous()
-            up_proj = torch.randn((expert_num, intermediate_size, hidden_size), dtype=torch.float32, device = "cuda").to("cpu").contiguous()
-            down_proj = torch.randn((expert_num, hidden_size, intermediate_size), dtype=torch.float32, device = "cuda").to("cpu").contiguous()
+            gate_proj = torch.randn((expert_num, intermediate_size, hidden_size), dtype=torch.float32, device = "cpu").to("cpu").contiguous()
+            up_proj = torch.randn((expert_num, intermediate_size, hidden_size), dtype=torch.float32, device = "cpu").to("cpu").contiguous()
+            down_proj = torch.randn((expert_num, hidden_size, intermediate_size), dtype=torch.float32, device = "cpu").to("cpu").contiguous()
             config = cpuinfer_ext.moe.MOEConfig(expert_num, n_routed_experts, hidden_size, intermediate_size, stride, group_min_len, group_max_len, gate_proj.data_ptr(), up_proj.data_ptr(), down_proj.data_ptr(), gate_type, up_type, down_type, hidden_type)
             moe = cpuinfer_ext.moe.MOE(config)
             gate_projs.append(gate_proj)
             up_projs.append(up_proj)
             down_projs.append(down_proj)
             moes.append(moe)
-        expert_ids = torch.stack([torch.stack([torch.randperm(expert_num, dtype=torch.int64, device = "cuda")[:n_routed_experts] for _ in range(qlen)]) for _ in range(layer_num)]).to("cpu").contiguous()
-        weights = torch.rand((layer_num, qlen, n_routed_experts), dtype=torch.float32, device = "cuda").to("cpu").contiguous()
-        input = torch.randn((layer_num, qlen, hidden_size), dtype=torch.bfloat16, device = "cuda").to("cpu").contiguous()
-        output = torch.empty((layer_num, qlen, hidden_size), dtype=torch.bfloat16, device = "cuda").to("cpu").contiguous()
+        expert_ids = torch.stack([torch.stack([torch.randperm(expert_num, dtype=torch.int64, device = "cpu")[:n_routed_experts] for _ in range(qlen)]) for _ in range(layer_num)]).to("cpu").contiguous()
+        weights = torch.rand((layer_num, qlen, n_routed_experts), dtype=torch.float32, device = "cpu").to("cpu").contiguous()
+        input = torch.randn((layer_num, qlen, hidden_size), dtype=torch.bfloat16, device = "cpu").to("cpu").contiguous()
+        output = torch.empty((layer_num, qlen, hidden_size), dtype=torch.bfloat16, device = "cpu").to("cpu").contiguous()
 
         # warm up
         for i in range(warm_up_iter):
@@ -149,12 +149,12 @@ def bench_moe(quant_mode: str):
 bench_moe("fp32")
 bench_moe("fp16")
 bench_moe("bf16")
-bench_moe("q8_0")
-bench_moe("q6_k")
-bench_moe("q5_k_m")
+# bench_moe("q8_0")
+# bench_moe("q6_k")
+# bench_moe("q5_k_m")
 bench_moe("q4_k_m")
-bench_moe("q3_k_m")
-bench_moe("q2_k")
+# bench_moe("q3_k_m")
+# bench_moe("q2_k")
 # Not supported on __x86_64__
 # bench_linear("iq3_xs")
 # bench_linear("iq2_xxs")
