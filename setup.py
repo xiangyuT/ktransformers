@@ -49,19 +49,19 @@ class VersionInfo:
     )
     FORCE_BUILD = os.getenv("KTRANSFORMERS_FORCE_BUILD", "FALSE") == "TRUE"
 
-    def get_cuda_bare_metal_version(self, cuda_dir):
-        raw_output = subprocess.check_output(
-            [cuda_dir + "/bin/nvcc", "-V"], universal_newlines=True)
-        output = raw_output.split()
-        release_idx = output.index("release") + 1
-        bare_metal_version = parse(output[release_idx].split(",")[0])
-        cuda_version = f"{bare_metal_version.major}{bare_metal_version.minor}"
-        return cuda_version
+    # def get_cuda_bare_metal_version(self, cuda_dir):
+    #     raw_output = subprocess.check_output(
+    #         [cuda_dir + "/bin/nvcc", "-V"], universal_newlines=True)
+    #     output = raw_output.split()
+    #     release_idx = output.index("release") + 1
+    #     bare_metal_version = parse(output[release_idx].split(",")[0])
+    #     cuda_version = f"{bare_metal_version.major}{bare_metal_version.minor}"
+    #     return cuda_version
 
-    def get_cuda_version_of_torch(self,):
-        torch_cuda_version = parse(torch.version.cuda)
-        cuda_version = f"{torch_cuda_version.major}{torch_cuda_version.minor}"
-        return cuda_version
+    # def get_cuda_version_of_torch(self,):
+    #     torch_cuda_version = parse(torch.version.cuda)
+    #     cuda_version = f"{torch_cuda_version.major}{torch_cuda_version.minor}"
+    #     return cuda_version
 
     def get_platform(self,):
         """
@@ -129,7 +129,7 @@ class VersionInfo:
 
     def get_package_version(self, full_version=False):
         flash_version = self.get_flash_version()
-        package_version = f"{str(flash_version)}+cu{self.get_cuda_bare_metal_version(CUDA_HOME)}torch{self.get_torch_version()}{self.get_cpu_instruct()}"
+        package_version = f"{str(flash_version)}+torch{self.get_torch_version()}{self.get_cpu_instruct()}"
         if full_version:
             return package_version
         if not VersionInfo.FORCE_BUILD:
@@ -297,19 +297,19 @@ setup(
     cmdclass={"bdist_wheel":BuildWheelsCommand ,"build_ext": CMakeBuild},
     ext_modules=[
         CMakeExtension("cpuinfer_ext"),
-        CUDAExtension('KTransformersOps', [
-            'ktransformers/ktransformers_ext/cuda/custom_gguf/dequant.cu',
-            'ktransformers/ktransformers_ext/cuda/binding.cpp',
-            'ktransformers/ktransformers_ext/cuda/gptq_marlin/gptq_marlin.cu'
-        ],
-        extra_compile_args={
-                'cxx': ['-O3'],
-                'nvcc': [
-                    '-O3',
-                    '--use_fast_math',
-                    '-Xcompiler', '-fPIC',
-                ]
-            }
-        )
+        # CUDAExtension('KTransformersOps', [
+        #     'ktransformers/ktransformers_ext/cuda/custom_gguf/dequant.cu',
+        #     'ktransformers/ktransformers_ext/cuda/binding.cpp',
+        #     'ktransformers/ktransformers_ext/cuda/gptq_marlin/gptq_marlin.cu'
+        # ],
+        # extra_compile_args={
+        #         'cxx': ['-O3'],
+        #         'nvcc': [
+        #             '-O3',
+        #             '--use_fast_math',
+        #             '-Xcompiler', '-fPIC',
+        #         ]
+        #     }
+        # )
     ]
 )
