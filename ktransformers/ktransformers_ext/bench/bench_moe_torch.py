@@ -18,7 +18,7 @@ scale, zero_point = 0.1, 0  # Adjust scale and zero_point based on your dataset
 
 expert_num = 256
 hidden_size = 7168
-intermediate_size = 18432
+intermediate_size = 2048
 n_routed_experts = 8
 layer_num = 1
 qlen = 1
