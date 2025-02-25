@@ -17,12 +17,12 @@ import torch
 
 expert_num = 256
 hidden_size = 7168
-intermediate_size = 18432
+intermediate_size = 2048
 stride = 16
 group_min_len = 10
 group_max_len = 1024
 n_routed_experts = 8
-layer_num = 10
+layer_num = 1
 qlen = 1
 CPUInfer = cpuinfer_ext.CPUInfer(64)
 warm_up_iter = 1000
